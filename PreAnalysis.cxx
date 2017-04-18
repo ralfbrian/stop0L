@@ -1,0 +1,245 @@
+#include <iostream>
+#include <string>
+#include <TH1.h>
+#include <TTree.h>
+#include <TLorentzVector.h>
+#include "Histogram.h"
+#include "datadefinition.h"
+#include "PreAnalysis.h"
+
+
+PreAnalysis::PreAnalysis():Histogram(),
+                           jet_idx(8,0),
+                           ele_idx(8,0),
+                           mu_idx(8,0),
+                           econtainer(0),
+                           mcontainer(0),
+                           pcontainer(0),
+                           tcontainer(0),
+                           jcontainer(0),
+                           j12container(0),
+                           j08container(0),
+                           m_weight(0),
+                           metcontainer(0),
+                           fileinfo(0)
+{
+  firstjet.SetPxPyPzE(0.,0.,0.,0.);
+  secondjet.SetPxPyPzE(0.,0.,0.,0.);
+}
+
+void PreAnalysis::init(){
+  w0 = 1.;
+  xsec = 1.;
+  w1 = 1.;
+  w2 = 1.;
+  w3 = 1.;
+  w4 = 1.;
+  w5 = 1.;
+  w6 = 1.;
+  w7 = 1.;
+  w8 = 1.;
+  w9 = 1.;
+  w10 = 1.;
+  if(isMC){
+    w0 = (*m_weight)["mcEventWeight"];
+    xsec = (*m_weight)["Xsec"];
+    w1 = (*m_weight)["PileupWeight"];
+    w2 = (*m_weight)["JetSF"];
+    w3 = (*m_weight)["JvtSF"];
+    w4 = (*m_weight)["BtagSF"];
+    w5 = (*m_weight)["ElectronSF2015"];
+    w6 = (*m_weight)["ElectronSF2016"];
+    w7 = (*m_weight)["MuonSF2015"];
+    w8 = (*m_weight)["MuonSF2016"];
+    w9 = (*m_weight)["SumofWeight"];
+    w10 = (*m_weight)["SumofSquaredWeight"];
+  }
+/*
+  else{
+    runnumber = stoi((*fileinfo)["RunNumber"]);
+    eventnumber = stol((*fileinfo)["EventNumber"]);
+  }
+*/
+  // MET
+  metPro* met = &(*metcontainer)["TST"];
+  tst.SetPxPyPzE(met->yylmpx,met->yylmpy,0.,met->yylsumet);
+  met = &(*metcontainer)["TRK"];
+  trk.SetPxPyPzE(met->yylmpx,met->yylmpy,0.,met->yylsumet);
+  
+  jetcal();
+  
+  ecal();
+ 
+  mcal();
+
+  taucal();
+  
+  j12cal();
+
+  j08cal();
+  
+  passGRL = false;
+  PV = false;
+  Dstatus = false;
+  if ((*fileinfo)["GRL"] == "isMC" || (*fileinfo)["GRL"] == "2015" || (*fileinfo)["GRL"] == "2016"){
+    passGRL = true;
+  }
+  if ((*fileinfo)["Dstatus"] == "isMC" || (*fileinfo)["Dstatus"] != "false"){
+    Dstatus = true;
+  }
+  if ((*fileinfo)["primaryvertex"] == "true"){
+    PV = true;
+  }
+  return;
+}
+
+void PreAnalysis::jetcal(){
+  bool firstrun = true;
+  bool firstrun2= true;
+  jet80 = 0;
+  jet40 = 0;
+  jetptsort.clear();
+  jet_idx.clear();
+  jet_idx.resize(8,0);
+  objPro *fjet = 0;
+  objPro *sjet = 0;
+  for (auto& jet : *jcontainer){
+    if (jet.passOR == 1 && jet.baseline == 1){
+      jet_idx[PreAnalysis::baseline]++;
+      if (jet.bad == 1 ){
+        jet_idx[PreAnalysis::bad]++;
+      }
+      else{
+        jetptsort.push_back(jet.yylpt*0.001);
+        if (jet.yylpt > 40000.){
+          jet40++;
+          if (jet.yylpt > 80000.){
+            jet80++;
+            if (firstrun){
+              fjet = &jet;
+              firstrun = false;
+            }
+            else{
+              if (jet.yylpt > fjet->yylpt){
+                    sjet = fjet;
+                    fjet = &jet;
+              }
+              else{
+                if (sjet != NULL){
+                  if (jet.yylpt > sjet->yylpt) sjet = &jet;
+                }
+                else
+                  sjet = &jet;
+              }
+            }
+          }
+        }
+      }
+    }
+    if (jet.passOR == 1 && jet.btagged == 1){
+      jet_idx[PreAnalysis::btagged]++;
+      if (firstrun2){
+        Mtbmin = sqrt(2*(jet.yylpt)*(tst.Pt())*(1-cos(jet.yylphi-tst.Phi())));
+        fabsdphi = fabs(jet.yylphi-tst.Phi());
+        firstrun2 = false;
+      }
+      else {
+        if (fabs(jet.yylphi-tst.Phi()) < fabsdphi){
+          Mtbmin = sqrt(2*(jet.yylpt)*(tst.Pt())*(1-cos(jet.yylphi-tst.Phi())));
+          fabsdphi = fabs(jet.yylphi-tst.Phi());
+        }
+      }
+    }
+  }
+  std::sort(jetptsort.rbegin(),jetptsort.rend());
+  if (fjet)firstjet.SetPtEtaPhiM(fjet->yylpt,fjet->yyleta,fjet->yylphi,fjet->yylm);
+  if (sjet)secondjet.SetPtEtaPhiM(sjet->yylpt,sjet->yyleta,sjet->yylphi,sjet->yylm);
+  return;
+}
+
+void PreAnalysis::ecal(){
+  ele_idx.clear();
+  ele_idx.resize(8,0);
+  for (auto& electron : *econtainer){
+    if (electron.passOR == 1) {
+      if (electron.baseline == 1){
+        ele_idx[PreAnalysis::baseline]++;
+      }
+      if (electron.signal == 1 ){
+        ele_idx[PreAnalysis::signallep]++;
+      } 
+    }
+  }
+  return;
+}
+
+void PreAnalysis::mcal(){
+  mu_idx.clear();
+  mu_idx.resize(8,0);
+  for (auto& muon : *mcontainer){
+    if (muon.bad == 1 && muon.baseline == 1)
+      mu_idx[PreAnalysis::bad]++;
+    if (muon.passOR == 1 && muon.baseline == 1){
+      mu_idx[PreAnalysis::baseline]++;
+      if (muon.cosmic == 1 )
+        mu_idx[PreAnalysis::cosmic]++;
+    }
+  }
+  return;
+}
+
+void PreAnalysis::j12cal(){
+  j12sort.clear();
+  for (auto& jet12 : *j12container){
+    j12sort.push_back(jet12.yylm);
+  }
+  std::sort(j12sort.rbegin(),j12sort.rend());
+  return;
+}
+
+void PreAnalysis::j08cal(){
+  j08sort.clear();
+  for (auto& jet08 : *j08container){
+    j08sort.push_back(jet08.yylm);
+  }
+  std::sort(j08sort.rbegin(),j08sort.rend());
+  return;
+}
+
+void PreAnalysis::taucal(){
+  tau_idx.clear();
+  tau_idx.resize(8,0);
+  for (auto& tau : *tcontainer){
+    if (tau.passOR == 1 & tau.baseline ==1)
+      tau_idx[PreAnalysis::baseline]++;
+  } 
+  return;
+}
+
+void PreAnalysis::SetTree(TTree *Yggdrasil){
+  Yggdrasil->SetBranchAddress("fileinfo",&fileinfo);
+  Yggdrasil->GetEntry();
+  if ((*fileinfo)["GRL"] == "isMC"){
+    isMC = true;
+    Yggdrasil->SetBranchAddress("weight",&m_weight);
+  }
+  else{
+    isMC = false;
+    if ((*fileinfo)["GRL"] == "2015"){
+      d15 = true;
+      d16 = false;
+    }
+    if ((*fileinfo)["GRL"] == "2016"){
+      d15 = false;
+      d16 = true;
+    }
+  }
+  Yggdrasil->SetBranchAddress("econtainer",&econtainer);
+  Yggdrasil->SetBranchAddress("mcontainer",&mcontainer);
+  Yggdrasil->SetBranchAddress("tcontainer",&tcontainer);
+  Yggdrasil->SetBranchAddress("jcontainer",&jcontainer);
+  Yggdrasil->SetBranchAddress("j12container",&j12container);
+  Yggdrasil->SetBranchAddress("j08container",&j08container);
+  Yggdrasil->SetBranchAddress("metcontainer",&metcontainer);
+  return;
+}
