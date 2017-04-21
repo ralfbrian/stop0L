@@ -1,3 +1,6 @@
+#ifndef _PREANALYSIS_H_
+#include "PreAnalysis.h"
+#endif
 using namespace std;
 class ApplyCut{
   public:

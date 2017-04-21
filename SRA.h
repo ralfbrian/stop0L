@@ -1,3 +1,8 @@
+#ifndef _SRA_H_
+#define _SRA_H_
+#ifndef _PREANALYSIS_H_
+#include "PreAnalysis.h"
+#endif
 using namespace std;
 class SRA{
   public: 
@@ -37,7 +42,7 @@ class SRA{
       PreAnalysis *A;
 };
 
-SRA::SRA(PreAnalysis *Ana):A(Ana),cutflow(2,true),w(4,1.),dpmm(10.),dp2mfj(0.),dp2msj(0.){
+SRA::SRA(PreAnalysis *Ana):A(Ana),cutflow(Ana->base.size(),true),w(Ana->base.size(),1.),dpmm(10.),dp2mfj(0.),dp2msj(0.){
   sranames = {"GRL",
               "LAr and Tile",
               "trigger",
@@ -64,9 +69,9 @@ SRA::SRA(PreAnalysis *Ana):A(Ana),cutflow(2,true),w(4,1.),dpmm(10.),dp2mfj(0.),d
 
 void SRA::reset(){
   cutflow.clear();
-  cutflow.resize(2,true);
+  cutflow.resize(A->base.size(),true);
   w.clear();
-  w.resize(4,1.);
+  w.resize(A->base.size(),1.);
   return;
 }
 
@@ -347,3 +352,5 @@ SRA& SRA::cut_met400(){
   }
   return *this;
 }
+
+#endif

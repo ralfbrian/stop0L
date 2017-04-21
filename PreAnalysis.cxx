@@ -2,13 +2,14 @@
 #include <string>
 #include <TH1.h>
 #include <TTree.h>
+#include <TFile.h>
 #include <TLorentzVector.h>
-#include "Histogram.h"
+#include "HistInit.h"
 #include "datadefinition.h"
 #include "PreAnalysis.h"
 
 
-PreAnalysis::PreAnalysis():Histogram(),
+PreAnalysis::PreAnalysis():HistInit(),
                            jet_idx(8,0),
                            ele_idx(8,0),
                            mu_idx(8,0),
@@ -54,12 +55,12 @@ void PreAnalysis::init(){
     w9 = (*m_weight)["SumofWeight"];
     w10 = (*m_weight)["SumofSquaredWeight"];
   }
-/*
   else{
-    runnumber = stoi((*fileinfo)["RunNumber"]);
-    eventnumber = stol((*fileinfo)["EventNumber"]);
+    if((*fileinfo)["RunNumber"].size()>5){
+      runnumber = stoi((*fileinfo)["RunNumber"]);
+      eventnumber = stol((*fileinfo)["EventNumber"]);
+    }
   }
-*/
   // MET
   metPro* met = &(*metcontainer)["TST"];
   tst.SetPxPyPzE(met->yylmpx,met->yylmpy,0.,met->yylsumet);
@@ -98,7 +99,10 @@ void PreAnalysis::jetcal(){
   bool firstrun2= true;
   jet80 = 0;
   jet40 = 0;
+  jet20 = 0;
   jetptsort.clear();
+  getbasejet.clear();
+  getbjet.clear();
   jet_idx.clear();
   jet_idx.resize(8,0);
   objPro *fjet = 0;
@@ -111,6 +115,8 @@ void PreAnalysis::jetcal(){
       }
       else{
         jetptsort.push_back(jet.yylpt*0.001);
+        getbasejet.push_back(&jet);
+        if (jet.yylpt > 20000.) jet20++;
         if (jet.yylpt > 40000.){
           jet40++;
           if (jet.yylpt > 80000.){
@@ -137,6 +143,7 @@ void PreAnalysis::jetcal(){
       }
     }
     if (jet.passOR == 1 && jet.btagged == 1){
+      getbjet.push_back(&jet);
       jet_idx[PreAnalysis::btagged]++;
       if (firstrun2){
         Mtbmin = sqrt(2*(jet.yylpt)*(tst.Pt())*(1-cos(jet.yylphi-tst.Phi())));
@@ -158,11 +165,13 @@ void PreAnalysis::jetcal(){
 }
 
 void PreAnalysis::ecal(){
+  getbaseele.clear();
   ele_idx.clear();
   ele_idx.resize(8,0);
   for (auto& electron : *econtainer){
     if (electron.passOR == 1) {
       if (electron.baseline == 1){
+        getbaseele.push_back(&electron);
         ele_idx[PreAnalysis::baseline]++;
       }
       if (electron.signal == 1 ){
@@ -176,11 +185,13 @@ void PreAnalysis::ecal(){
 void PreAnalysis::mcal(){
   mu_idx.clear();
   mu_idx.resize(8,0);
+  getbasemu.clear();
   for (auto& muon : *mcontainer){
     if (muon.bad == 1 && muon.baseline == 1)
       mu_idx[PreAnalysis::bad]++;
     if (muon.passOR == 1 && muon.baseline == 1){
       mu_idx[PreAnalysis::baseline]++;
+      getbasemu.push_back(&muon);
       if (muon.cosmic == 1 )
         mu_idx[PreAnalysis::cosmic]++;
     }

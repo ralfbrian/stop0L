@@ -7,7 +7,7 @@
 #ifndef _PREANALYSIS_H_
 #define _PREANALYSIS_H_
 using namespace std;
-class PreAnalysis : public Histogram{
+class PreAnalysis : public HistInit{
   public:
   PreAnalysis();
 
@@ -63,6 +63,10 @@ class PreAnalysis : public Histogram{
   std::vector<int> ele_idx;
   std::vector<int> mu_idx;
   std::vector<int> tau_idx;
+  std::vector<objPro*> getbasejet;
+  std::vector<objPro*> getbaseele;
+  std::vector<objPro*> getbasemu;
+  std::vector<objPro*> getbjet;
 
   // pre selection
   bool passGRL;
