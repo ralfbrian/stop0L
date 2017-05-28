@@ -24,13 +24,17 @@ class PreAnalysis : public HistInit{
 
   void SetTree(TTree *tt);
 
+  void SetName(string fname);
+
   void init();
 
   public:
   // event info
+  string filename;
   int32_t runnumber;
   int64_t eventnumber;
   bool isMC;
+  bool isSignal;
   bool d16;
   bool d15;
   // weight

@@ -1,3 +1,5 @@
+#ifndef _DATADEFINITION_H_
+#define _DATADEFINITION_H_
 #include "TObject.h"
 
 class objPro : public TObject{
@@ -11,15 +13,15 @@ class objPro : public TObject{
   double yylrapidity = -1e4;
   float yylbtagweight = -1e4;
   // value 1 or 0 is initialzied. -100 means non-initialized
-  bool signal = false;
-  bool baseline = false;
-  bool bad = false;
-  bool cosmic = false;
-  bool btagged = false;
-  bool passOR = false;
-  bool trgmatch_2015 = false;
-  bool trgmatch_2016 = false;
-  // this is needed to distribute the algorithm to the workers
+  uint8_t signal = 0;
+  uint8_t baseline = 0;
+  uint8_t bad = 0;
+  uint8_t cosmic = 0;
+  uint8_t btagged = 0;
+  uint8_t passOR = 0;
+  uint8_t trgmatch_2015 = 0;
+  uint8_t trgmatch_2016 = 0;
+  uint32_t yylnTrk = 0;
 };
 
 class metPro : public TObject{
@@ -29,6 +31,6 @@ class metPro : public TObject{
   double yylmet = -1e4;
   double yylphi = -1e4;
   double yylsumet = -1e4;
-  // this is needed to distribute the algorithm to the workers
 };
 
+#endif

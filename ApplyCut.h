@@ -19,9 +19,7 @@ ApplyCut::ApplyCut(PreAnalysis *Ana):A(Ana){
 
 void ApplyCut::AddCut(vector<bool> cut){
   cutflow.clear();
-  for (size_t i = 0; i < cut.size();i++){
-    cutflow.push_back(cut[i]);
-  }
+  cutflow.swap(cut);
   return;
 }
 

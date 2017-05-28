@@ -15,6 +15,7 @@ class HistInit{
     TH1 *h_SRATT[4];
     TH1 *h_SRATT_NEW[4];
     TH1 *h_CRZ[4];
+    TH1 *h_CRZ_NEW[4];
     // CRZ
     TH1 *h_CRZ_njetr[4];
     TH1 *h_CRZ_eptr[4];
@@ -30,6 +31,7 @@ class HistInit{
     TH1 *h_CRZ_METr[4];
     TH1 *h_CRZ_METpr[4];
     TH1 *h_CRZ_nbjetr[4];
+    TH1 *h_CRZ_nbjetr_NEW[4];
     TH1 *h_CRZ_njet[4];
     TH1 *h_CRZ_ept[4];
     TH1 *h_CRZ_mpt[4];
@@ -44,6 +46,7 @@ class HistInit{
     TH1 *h_CRZ_MET[4];
     TH1 *h_CRZ_METp[4];
     TH1 *h_CRZ_nbjet[4];
+    TH1 *h_CRZ_nbjet_NEW[4];
     TH1 *h_CRZ_F_Z[4];
     TH1 *h_CRZ_F_MET[4];
     TH1 *h_CRZ_F_METp[4];
@@ -83,6 +86,15 @@ class HistInit{
     TH1 *h_cut24[4];
     TH1 *h_cut25[4];
     TH1 *h_cut27[4]; 
+    TH1 *h_cut22_F[4];
+    TH1 *h_cut23_F[4];
+    TH1 *h_cut22_new[4];
+    TH1 *h_cut23_new[4];
+    TH1 *h_cut24_new[4];
+    TH1 *h_cut25_new[4];
+    TH1 *h_cut27_new[4]; 
+    TH1 *h_cut22_new_F[4];
+    TH1 *h_cut23_new_F[4];
     TH1 *h_mass[4];
     TH1 *h_mass_e[4];
     TH1 *h_mass_mu[4];
@@ -104,8 +116,9 @@ class HistInit{
 HistInit::HistInit():fout(0){
   //base = {"_2015","_2016_1","_2016_2","_2016_3"};
   base = {"_2015","_2016_1"};
-  Init(&h_CRZ, SetInfo("CRZ","Cut Flow of CRZ",14,0.5,14.5,1));
-  Init(&h_CRZ_njetr, SetInfo("CRZnjetr", "number of jet reference;Njet", 15,0.5,15.5,1));
+  Init(&h_CRZ, SetInfo("CRZ","Cut Flow of CRZ",15,0.5,15.5,1));
+  Init(&h_CRZ_NEW, SetInfo("CRZ_NEW","Cut Flow of CRZ",15,0.5,15.5,1));
+  Init(&h_CRZ_njetr, SetInfo("CRZnjetr", "number of jet reference;Njet", 16,-0.5,15.5,1));
   Init(&h_CRZ_eptr, SetInfo("CRZeptr","electron pt reference;pt[GeV];Events/20GeV",30,0,600,1));
   Init(&h_CRZ_mptr, SetInfo("CRZmptr","muon pt reference;pt[GeV];Events/20GeV",30,0,600,1));
   Init(&h_CRZ_jet1r, SetInfo("CRZjet1r","Jet 1 pt reference;pt[GeV];Events/40GeV",15,0,600,1));
@@ -118,8 +131,9 @@ HistInit::HistInit():fout(0){
   Init(&h_CRZ_Zr, SetInfo("CRZZr", "Zmass reference;m [GeV];Events/0.2GeV", 50,86,96,1));
   Init(&h_CRZ_METr, SetInfo("CRZMETr", "MET reference;ETmiss [GeV];Events/20GeV", 20,0,400,1));
   Init(&h_CRZ_METpr, SetInfo("CRZMETpr", "MET(p) reference;ETmiss [GeV];Events/20GeV", 40,0,800,1));
-  Init(&h_CRZ_nbjetr, SetInfo("CRZnbjetr", "number of bjet reference;Nbjet", 10,0.5,10.5,1));
-  Init(&h_CRZ_njet, SetInfo("CRZnjet", "number of jet;Njet", 15,0.5,15.5,1));
+  Init(&h_CRZ_nbjetr, SetInfo("CRZnbjetr", "number of bjet reference;Nbjet", 11,-0.5,10.5,1));
+  Init(&h_CRZ_nbjetr_NEW, SetInfo("CRZnbjetr_NEW", "number of bjet reference;Nbjet", 11,-0.5,10.5,1));
+  Init(&h_CRZ_njet, SetInfo("CRZnjet", "number of jet;Njet", 16,-0.5,15.5,1));
   Init(&h_CRZ_ept, SetInfo("CRZept","electron pt;pt[GeV];Events/20GeV",30,0,600,1));
   Init(&h_CRZ_mpt, SetInfo("CRZmpt","muon pt;pt[GeV];Events/20GeV",30,0,600,1));
   Init(&h_CRZ_jet1, SetInfo("CRZjet1","Jet 1 pt;pt[GeV];Events/40GeV",15,0,600,1));
@@ -132,11 +146,12 @@ HistInit::HistInit():fout(0){
   Init(&h_CRZ_Z, SetInfo("CRZZ", "Zmass ;m [GeV];Events/0.2GeV", 50,86,96,1));
   Init(&h_CRZ_MET, SetInfo("CRZMET", "MET;ETmiss [GeV];Events/20GeV", 20,0,400,1));
   Init(&h_CRZ_METp, SetInfo("CRZMETp", "MET(p) reference;ETmiss [GeV];Events/20GeV", 40,0,800,1));
-  Init(&h_CRZ_nbjet, SetInfo("CRZnbjet", "number of bjet;Nbjet", 10,0.5,10.5,1));
+  Init(&h_CRZ_nbjet, SetInfo("CRZnbjet", "number of bjet;Nbjet", 11,-0.5,10.5,1));
+  Init(&h_CRZ_nbjet_NEW, SetInfo("CRZnbjet_NEW", "number of bjet;Nbjet", 11,-0.5,10.5,1));
   Init(&h_CRZ_F_Z, SetInfo("CRZZ_F", "Zmass ;m [GeV];Events/0.2GeV", 50,86,96,1));
   Init(&h_CRZ_F_MET, SetInfo("CRZMET_F", "MET;ETmiss [GeV];Events/20GeV", 20,0,400,1));
   Init(&h_CRZ_F_METp, SetInfo("CRZMETp_F", "MET(p) reference;ETmiss [GeV];Events/20GeV", 40,0,800,1));
-  Init(&h_CRZ_F_nbjet, SetInfo("CRZnbjet_F", "number of bjet;Nbjet", 10,0.5,10.5,1));
+  Init(&h_CRZ_F_nbjet, SetInfo("CRZnbjet_F", "number of bjet;Nbjet", 11,-0.5,10.5,1));
   Init(&h_CRZ_Zpt, SetInfo("CRZZpt","Z pt;pt[GeV];Events/20GeV",30,0,600,1));
   Init(&h_CRZ_F_Zpt, SetInfo("CRZZpt_F","Z pt;pt[GeV];Events/20GeV",30,0,600,1));
   Init(&h_CRZ_ne, SetInfo("CRZne","electron size;N. electron;Events/1",11,-0.5,10.5,1));
@@ -167,12 +182,21 @@ HistInit::HistInit():fout(0){
   Init(&h_cut19, SetInfo("cut19", "MET track  > 30GeV;ETmiss,track [GeV]", 40,0,400,1));
   Init(&h_cut20, SetInfo("cut20", "d phi between MET track and MET < pi/3;d phi [rad]", 32,0,3.2,1));
   Init(&h_cut21, SetInfo("cut21", "two b tag;Nbtag", 6,0.5,6.5,1));
-  Init(&h_cut22, SetInfo("cut22", "Makt12,0 > 120GeV;Makt12,0 [GeV]", 26,0,390,1));
-  Init(&h_cut23, SetInfo("cut23", "Makt12,1 > 120GeV;Makt12,1 [GeV]", 26,0,390,1));
-  Init(&h_cut24, SetInfo("cut24", "Makt08 > 60GeV;Makt08,0 [GeV]", 15,0,450,1));
-  Init(&h_cut25, SetInfo("cut25", "MtBMin > 200GeV;MtBMin [GeV]", 20,0,1000,1));
+  Init(&h_cut22, SetInfo("cut22", "Makt12,0 > 120GeV;Makt12,0 [GeV]", 52,0,780,1));
+  Init(&h_cut23, SetInfo("cut23", "Makt12,1 > 120GeV;Makt12,1 [GeV]", 52,0,780,1));
+  Init(&h_cut24, SetInfo("cut24", "Makt08 > 60GeV;Makt08,0 [GeV]", 20,0,600,1));
+  Init(&h_cut25, SetInfo("cut25", "MtBMin > 200GeV;MtBMin [GeV]", 50,0,1000,1));
   Init(&h_cut27, SetInfo("cut27", "MET > 400GeV;ETmiss [GeV]", 20,0,1000,1)); 
+  Init(&h_cut22_F, SetInfo("cut22_F", "Makt12,0 > 120GeV;Makt12,0 [GeV]", 52,0,780,1));
+  Init(&h_cut23_F, SetInfo("cut23_F", "Makt12,1 > 120GeV;Makt12,1 [GeV]", 52,0,780,1));
   Init(&h_SRATT, SetInfo("SRATT_O","Cut Flow of SRA-TT",21,0,21,1));
+  Init(&h_cut22_new, SetInfo("cut22_new", "Makt12,0 > 120GeV;Makt12,0 [GeV]", 52,0,780,1));
+  Init(&h_cut23_new, SetInfo("cut23_new", "Makt12,1 > 120GeV;Makt12,1 [GeV]", 52,0,780,1));
+  Init(&h_cut24_new, SetInfo("cut24_new", "Makt08 > 60GeV;Makt08,0 [GeV]", 20,0,600,1));
+  Init(&h_cut25_new, SetInfo("cut25_new", "MtBMin > 200GeV;MtBMin [GeV]", 50,0,1000,1));
+  Init(&h_cut27_new, SetInfo("cut27_new", "MET > 400GeV;ETmiss [GeV]", 20,0,1000,1)); 
+  Init(&h_cut22_new_F, SetInfo("cut22_new_F", "Makt12,0 > 120GeV;Makt12,0 [GeV]", 52,0,780,1));
+  Init(&h_cut23_new_F, SetInfo("cut23_new_F", "Makt12,1 > 120GeV;Makt12,1 [GeV]", 52,0,780,1));
   Init(&h_SRATT_NEW, SetInfo("SRATT_NEW","Cut Flow of New SRA-TT",20,0,20,1));
   // interest
   Init(&h_mass, SetInfo("MASS","MASS SPECTRUM;mass [GeV]",10000,0,1000,1));
