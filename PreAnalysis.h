@@ -12,7 +12,7 @@ class PreAnalysis : public HistInit{
   PreAnalysis();
 
   enum sel {
-    signallep,
+    signal,
     baseline,
     bad,
     cosmic,
@@ -27,6 +27,12 @@ class PreAnalysis : public HistInit{
   void SetName(string fname);
 
   void init();
+
+  void FillLz(TLorentzVector& vec, objPro *obj);
+
+  bool chi2Top();
+
+  void CalMT2();
 
   public:
   // event info
@@ -55,6 +61,12 @@ class PreAnalysis : public HistInit{
   TLorentzVector trk;
   TLorentzVector firstjet;
   TLorentzVector secondjet;
+  TLorentzVector topCand0;
+  TLorentzVector topCand1;
+  TLorentzVector WCand0;
+  TLorentzVector WCand1;
+  double Chi2min;
+  double MT2;
   int32_t jet20;
   int32_t jet40;
   int32_t jet80;
@@ -63,6 +75,7 @@ class PreAnalysis : public HistInit{
   std::vector<double> j08sort; // MeV
   float Mtbmin;//MeV
   float fabsdphi;
+  float dRbb;
   std::vector<int> jet_idx;
   std::vector<int> ele_idx;
   std::vector<int> mu_idx;
@@ -76,6 +89,7 @@ class PreAnalysis : public HistInit{
   bool passGRL;
   bool PV;
   bool Dstatus;
+  bool calmt2;
 
   private:
   
@@ -90,6 +104,10 @@ class PreAnalysis : public HistInit{
   void j12cal();
 
   void j08cal();
+
+  void RClustering(std::vector<objPro*>& obj,std::vector<objPro>& rcjet,float dr, float ptmin);
+
+  void Bsort(vector<objPro*>& v_bjets);
   
   public:
     std::vector<objPro> *econtainer;

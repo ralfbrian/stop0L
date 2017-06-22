@@ -42,7 +42,7 @@ std::string stringmanage::ntos(T number){
   return my_string;
 }
 
-std::string stringmanage::addc(std::string origin, int digit, bool front = true, std::string character = "0"){
+std::string stringmanage::addc(std::string origin, int digit, bool front, std::string character){
   my_string = origin;
   for(int i = 0; i < digit; i++){
     if (front){
@@ -55,10 +55,10 @@ std::string stringmanage::addc(std::string origin, int digit, bool front = true,
   return my_string;
 }
 
-std::string stringmanage::rmc(std::string origin, std::string character = " "){
+std::string stringmanage::rmc(std::string origin, std::string character){
   std::string withoutspace = "";
   my_string = origin;
-  for (int a = 0; a < my_string.size(); a++){
+  for (size_t a = 0; a < my_string.size(); a++){
     if ( std::string(&my_string[a]).find(" ") == std::string::npos){
       withoutspace.push_back(my_string[a]);
     }
@@ -90,7 +90,7 @@ std::vector<std::string> stringmanage::sn(int start, int end, int digit){
 }
 
 template <class X>
-std::string stringmanage::addcton(X number, int digit, bool front = true, std::string character = "0"){
+std::string stringmanage::addcton(X number, int digit, bool front, std::string character){
   my_string = ntos(number);
   if (digit > my_string.size()){
     my_string = addc(my_string,digit-my_string.size(),front,character);

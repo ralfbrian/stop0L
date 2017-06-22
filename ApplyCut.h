@@ -7,7 +7,7 @@ class ApplyCut{
     ApplyCut(PreAnalysis *Ana);
     void AddCut(vector<bool> cut);
     template <class X>
-    void FillHist(TH1 *h[4],X data, vector<double> *weight);
+    void FillHist(TH1 *h[9],X data, vector<double> *weight);
 
   private:
     vector<bool> cutflow;
@@ -24,7 +24,7 @@ void ApplyCut::AddCut(vector<bool> cut){
 }
 
 template <class X>
-void ApplyCut::FillHist(TH1 *h[4],X data, vector<double> *weight){
+void ApplyCut::FillHist(TH1 *h[9],X data, vector<double> *weight){
   for (size_t i = 0; i < cutflow.size(); i++){
     if (!cutflow[i])continue;
     if (A->isMC){

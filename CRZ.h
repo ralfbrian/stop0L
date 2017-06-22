@@ -43,6 +43,8 @@ class CRZ
     CRZ& cut_metp();
     CRZ& cut_btag();
     CRZ& cut_onebtag();
+    CRZ& cut_makt120();
+    CRZ& cut_makt121();
   private:
     void NameInit();
   private:
@@ -230,7 +232,7 @@ CRZ& CRZ::cut_trigger(){
         cutflow[i] = false;
       }
     }
-    if (A->base[i].find("2016_1")!=std::string::npos){
+    if (A->base[i].find("2016")!=std::string::npos){
       if((*(A->fileinfo))["triggermatch_el_2016"] == "true" || (*(A->fileinfo))["triggermatch_mu_2016"] == "true"){
         FillCF(i);
       }
@@ -327,6 +329,14 @@ CRZ& CRZ::cut_nlepton(){
   bool isreturn = false;
   for (size_t i = 0; i < cutflow.size();i++){
     isreturn |= cutflow[i];
+    if (A->isMC){
+      if (A->base[i].find("2015")!=std::string::npos){
+        w[i] *= A->w5*A->w7;
+      }
+      if (A->base[i].find("2016")!=std::string::npos){
+        w[i] *= A->w6*A->w8;
+      }
+    }
   }
   if (!isreturn){
     order++;
@@ -390,7 +400,7 @@ CRZ& CRZ::cut_lpt(){
             mcheckpt++;
           }
         }
-        if (A->base[i].find("2016_1")!=std::string::npos){
+        if (A->base[i].find("2016")!=std::string::npos){
           if ((muon->signal == 1 && muon->yylpt > 20000.) || (muon->trgmatch_2016 == 1 && muon->yylpt > 25000.)){
             mcheckpt++;
           }
@@ -407,7 +417,7 @@ CRZ& CRZ::cut_lpt(){
             echeckpt++;
           }
         }
-        if (A->base[i].find("2016_1")!=std::string::npos){
+        if (A->base[i].find("2016")!=std::string::npos){
           if ((electron->signal == 1 && electron->yylpt > 20000.) || (electron->trgmatch_2016 == 1 && electron->yylpt > 30000.)){
             echeckpt++;
           }
@@ -538,6 +548,36 @@ CRZ& CRZ::cut_onebtag(){
   return *this;
 }
 
+CRZ& CRZ::cut_makt120(){
+  checkCF(15);
+  for (size_t t = 0; t < cutflow.size(); t++){
+    if (!cutflow[t]) continue;
+    if (A->j12sort.size() >= 1 && A->j12sort.at(0) > 120000.){
+      FillCF(t);
+    }
+    else{
+      cutflow[t] = false;
+    }
+  }
+  order++;
+  return *this;
+}
+
+CRZ& CRZ::cut_makt121(){
+  checkCF(16);
+  for (size_t t = 0; t < cutflow.size(); t++){
+    if (!cutflow[t]) continue;
+    if (A->j12sort.size() >= 2 && A->j12sort.at(1) > 60000.){
+      FillCF(t);
+    }
+    else{
+      cutflow[t] = false;
+    }
+  }
+  order++;
+  return *this;
+}
+
 void CRZ::NameInit(){
   CRZnames = {"GRL",
               "LAr and Tile",
@@ -553,8 +593,9 @@ void CRZ::NameInit(){
               "jet pt(80,80,40,40)",
               "MET < 50GeV",
               "METp > 70GeV",
-              "at least 2 b jets"
-              };
+              "at least 2 b jets",
+              "mass of first R = 1.2 jet > 120 GeV",
+              "mass of second R = 1.2 jet > 60 GeV"};
   return;
 }
 

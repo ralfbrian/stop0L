@@ -8,7 +8,9 @@ class OneLepton{
     vector<bool> pass();
     vector<double> w;
     void reset();
-    double getmtlep();
+    float getmtlep();
+    float getdrbl();
+    TLorentzVector lep1;
     vector<vector<pair<string,int64_t>>> nCFs;
     vector<vector<pair<string,double>>> dCFs;
     void SetCR(string CR);
@@ -19,6 +21,8 @@ class OneLepton{
     };
     bool firstrun;
     uint32_t order;
+    void checkCF(uint32_t pos);
+    void FillCF(size_t ttype);
   public:
     OneLepton& cut_GRL();
     OneLepton& cut_LTerror();
@@ -33,28 +37,36 @@ class OneLepton{
     OneLepton& cut_jpt();
     OneLepton& cut_MET250();
     OneLepton& cut_twobtags();
+    OneLepton& cut_onebtags();
     OneLepton& cut_dp2mj2();// dphiMETJetMin2 > 0.4
     OneLepton& cut_mtlep();
     OneLepton& cut_makt120();
+    OneLepton& cut_makt120_ben();
+    OneLepton& cut_makt121();
     OneLepton& cut_mtbmin();
     OneLepton& cut_drbl();
+    OneLepton& cut_makt080();
+    OneLepton& cut_drbb();
+    OneLepton& cut_MET();
   private:
     void bjetcal();
     void NameInit();
     void mtlepcal();
   private:
     bool isbjetcal;
+    bool ismtlepcal;
     vector<string> CRTnames;
     vector<string> *Currnames;
     PreAnalysis *A;
-    TLorentzVector lep1;
     TLorentzVector mtlep;
     string Name;
-    string Tnames;
+    vector<string> Tnames;
     int32_t region;
+    float m_mtlep;
+    float dRminbl;
 };
 
-OneLepton::OneLepton(PreAnalysis *Ana, string name = ""):region(Region::CRT),A(Ana),Name(name),cutflow(Ana->base.size(),true),w(Ana->base.size(),1.),nCFs(Ana->base.size()),dCFs(Ana->base.size()),isbjetcal(false),firstrun(true){
+OneLepton::OneLepton(PreAnalysis *Ana, string name):region(Region::CRT),A(Ana),Name(name),cutflow(Ana->base.size(),true),w(Ana->base.size(),1.),nCFs(Ana->base.size()),dCFs(Ana->base.size()),isbjetcal(false),firstrun(true),m_mtlep(0.),ismtlepcal(false),dRminbl(-1.),order(0){
   lep1.SetPtEtaPhiM(0,0,0,0);
   mtlep.SetPtEtaPhiM(0,0,0,0);
   NameInit();
@@ -63,7 +75,7 @@ OneLepton::OneLepton(PreAnalysis *Ana, string name = ""):region(Region::CRT),A(A
 
 OneLepton::~OneLepton(){
   stringmanage sg;
-  string treename = "Cutflow" + Tnames(region);
+  string treename = "Cutflow" + Tnames[region];
   if (Name.size()!=0){
     treename += "_" + Name;
   }
@@ -106,7 +118,9 @@ void OneLepton::reset(){
   lep1.SetPtEtaPhiM(0,0,0,0);
   mtlep.SetPtEtaPhiM(0,0,0,0);
   isbjetcal = false;
+  ismtlepcal = false;
   firstrun = false;
+  order = 0;
 }
 
 vector<bool> OneLepton::pass(){
@@ -120,15 +134,29 @@ bool compweight(objPro* aa, objPro* bb){
 void OneLepton::bjetcal(){
   if (A->getbjet.size()>=2){
     std::sort(A->getbjet.rbegin(),A->getbjet.rend(),compweight);
-    float dR1 = sqrt(pow(getbjet.at(0)->yyleta-lep1.Eta(),2)+pow(getbjet.at(0)->yylphi-lep1.Phi(),2));
-    float dR2 = sqrt(pow(getbjet.at(1)->yyleta-lep1.Eta(),2)+pow(getbjet.at(1)->yylphi-lep1.Phi(),2));
+    float dR1 = sqrt(pow(A->getbjet.at(0)->yyleta-lep1.Eta(),2)+pow(A->getbjet.at(0)->yylphi-lep1.Phi(),2));
+    float dR2 = sqrt(pow(A->getbjet.at(1)->yyleta-lep1.Eta(),2)+pow(A->getbjet.at(1)->yylphi-lep1.Phi(),2));
     if (dR1 > dR2){dRminbl=dR2;}
     else{dRminbl=dR1;}
   }
   isbjetcal = true;
   return;
 }
+float OneLepton::getdrbl(){
+  if (!isbjetcal) bjetcal();
+  return dRminbl;
+}
+
 void OneLepton::mtlepcal(){
+  m_mtlep = sqrt(2*(lep1.Pt())*(A->tst.Pt())*(1-cos(lep1.Phi()-A->tst.Phi())));
+  ismtlepcal = true;
+  return;
+}
+
+float OneLepton::getmtlep(){
+  if (!ismtlepcal)mtlepcal();
+  return m_mtlep;
+}
 
 OneLepton& OneLepton::cut_GRL(){
   checkCF(0);
@@ -172,10 +200,24 @@ OneLepton& OneLepton::cut_trigger(){
         FillCF(i);
       }else cutflow[i] = false;
     }
-    if (A->base[i].find("2016_1")!=std::string::npos){
+    if (A->base[i].find("2016_1")!=std::string::npos ){
+      if ((*(A->fileinfo))["triggermatch_xe90"] == "HLT_xe90_mht_L1XE50"){
+      //if ((*(A->fileinfo))["triggermatch_xe100"] == "HLT_xe100_mht_L1XE50"){
+        FillCF(i);
+      }else cutflow[i] = false;
+    }
+    if (A->base[i].find("2016_2")!=std::string::npos){
       if ((*(A->fileinfo))["triggermatch_xe100"] == "HLT_xe100_mht_L1XE50"){
         FillCF(i);
       }else cutflow[i] = false;
+    }
+    if (A->base[i].find("2016_3")!=std::string::npos ){
+      if ((*(A->fileinfo))["triggermatch_xe110"] == "HLT_xe110_mht_L1XE50"){
+        FillCF(i);
+      }
+      else{
+        cutflow[i] = false;
+      }
     }
   }
   order++;
@@ -246,7 +288,23 @@ OneLepton& OneLepton::cut_nlepton(){
   checkCF(7);
   for (size_t i = 0; i < cutflow.size();i++){
     if (!cutflow[i]) continue;
-    if ((mu_idx[OneLepton::baseline] == 1 && el_idx[OneLepton::baseline] == 0) || (mu_idx[OneLepton::baseline] == 0 && el_idx[OneLepton::baseline] == 1)){
+    if (A->isMC){
+      if (A->base[i].find("2015")!=std::string::npos){
+        w[i] *= A->w5*A->w7;
+      }
+      if (A->base[i].find("2016")!=std::string::npos){
+        w[i] *= A->w6*A->w8;
+      }
+    }
+    if ((A->mu_idx[PreAnalysis::signal] == 1 && A->mu_idx[PreAnalysis::baseline] == 1 && A->ele_idx[PreAnalysis::baseline] == 0) || (A->ele_idx[PreAnalysis::signal] == 1 && A->mu_idx[PreAnalysis::baseline] == 0 && A->ele_idx[PreAnalysis::baseline] == 1)){
+      if (A->mu_idx[PreAnalysis::signal] == 1){ 
+        auto mu = A->getbasemu[0];
+        lep1.SetPtEtaPhiM(mu->yylpt,mu->yyleta,mu->yylphi,mu->yylm);
+      }
+      if (A->ele_idx[PreAnalysis::signal] == 1){ 
+        auto el = A->getbaseele[0];
+        lep1.SetPtEtaPhiM(el->yylpt,el->yyleta,el->yylphi,el->yylm);
+      }
       FillCF(i);
     }else{cutflow[i] = false;}
   }
@@ -284,14 +342,15 @@ OneLepton& OneLepton::cut_lpt(){
   order++;
   return *this;
 }
+
 OneLepton& OneLepton::cut_njet(){
   checkCF(9);
-  for (size_t t = 0; t < cutflow.size(); t++){
-    if (!cutflow[t]) continue;
+  for (size_t i = 0; i < cutflow.size(); i++){
+    if (!cutflow[i]) continue;
     if (A->isMC){
-      w[t] *= A->w3;
+      w[i] *= A->w3;
     }
-    if (jet_idx[OneLepton::baseline]>=4){
+    if (A->jet_idx[PreAnalysis::signal] + 1 >=4){
       FillCF(i);
     }else cutflow[i] = false;
   }
@@ -300,10 +359,23 @@ OneLepton& OneLepton::cut_njet(){
 }
 
 OneLepton& OneLepton::cut_jpt(){
-  checkCF(9);
-  for (size_t t = 0; t < cutflow.size(); t++){
-    if (!cutflow[t]) continue;
-    if (jet40 >= 4 && jet80 >= 2){
+  checkCF(10);
+  bool con = false;
+  for (size_t i = 0; i < cutflow.size(); i++){
+    if (!cutflow[i]) continue;
+    con = true;
+  }
+  if (!con){
+    order++;
+    return *this;
+  }
+  int32_t j40 = A->jet40;
+  int32_t j80 = A->jet80;
+  if (lep1.Pt() > 40000 ) j40++;
+  if (lep1.Pt() > 80000 ) j80++;
+  for (size_t i = 0; i < cutflow.size(); i++){
+    if (!cutflow[i]) continue;
+    if (j40 >= 4 && j80 >= 2){
       FillCF(i);
     }else cutflow[i] = false;
   }
@@ -312,9 +384,9 @@ OneLepton& OneLepton::cut_jpt(){
 }
 
 OneLepton& OneLepton::cut_MET250(){
-  checkCF(10);
-  for (size_t t = 0; t < cutflow.size(); t++){
-    if (!cutflow[t]) continue;
+  checkCF(11);
+  for (size_t i = 0; i < cutflow.size(); i++){
+    if (!cutflow[i]) continue;
     if (A->tst.Pt() > 250000.){
       FillCF(i);
     }else cutflow[i] = false;
@@ -324,13 +396,33 @@ OneLepton& OneLepton::cut_MET250(){
 }
 
 OneLepton& OneLepton::cut_twobtags(){
-  checkCF(11);
-  for (size_t t = 0; t < cutflow.size(); t++){
-    if (!cutflow[t]) continue;
+  checkCF(12);
+  for (size_t i = 0; i < cutflow.size(); i++){
+    if (!cutflow[i]) continue;
     if (A->isMC){
-      w[t] *= A->w4;
+      w[i] *= A->w4;
     }
-    if (jet_idx[OneLepton::btagged] >= 2){
+    if (A->jet_idx[PreAnalysis::btagged] >= 2){
+      FillCF(i);
+    }else cutflow[i] = false;
+  }
+  order++;
+  return *this;
+}
+
+OneLepton& OneLepton::cut_onebtags(){
+  if (firstrun){
+    for (size_t i = 0; i < A->base.size(); i++){
+      nCFs[i].push_back(make_pair("at least one b jet",0));
+      dCFs[i].push_back(make_pair("at least one b jet",0.));
+    }
+  }
+  for (size_t i = 0; i < cutflow.size(); i++){
+    if (!cutflow[i]) continue;
+    if (A->isMC){
+      w[i] *= A->w4;
+    }
+    if (A->jet_idx[PreAnalysis::btagged] >= 1){
       FillCF(i);
     }else cutflow[i] = false;
   }
@@ -339,7 +431,7 @@ OneLepton& OneLepton::cut_twobtags(){
 }
 
 OneLepton& OneLepton::cut_dp2mj2(){
-  checkCF(12);
+  checkCF(13);
   bool isreturn = false;
   for (size_t i = 0; i < cutflow.size();i++){
     isreturn |= cutflow[i];
@@ -348,14 +440,16 @@ OneLepton& OneLepton::cut_dp2mj2(){
     order++;
     return *this;
   }
-  float dp2mfj = fabs(A->firstjet.Phi()-A->tst.Phi());
-  float dp2msj = fabs(A->secondjet.Phi()-A->tst.Phi());
-  dp2mfj = dp2mfj > (std::atan(1.0)*4) ? (std::atan(1.0)*8-dp2mfj) : dp2mfj;
-  dp2msj = dp2msj > (std::atan(1.0)*4) ? (std::atan(1.0)*8-dp2msj) : dp2msj;
+  //float dp2mfj = fabs(A->firstjet.Phi()-A->tst.Phi());
+  //float dp2msj = fabs(A->secondjet.Phi()-A->tst.Phi());
+  //dp2mfj = dp2mfj > (std::atan(1.0)*4) ? (std::atan(1.0)*8-dp2mfj) : dp2mfj;
+  //dp2msj = dp2msj > (std::atan(1.0)*4) ? (std::atan(1.0)*8-dp2msj) : dp2msj;
+  float dp2mfj = fabs(TVector2::Phi_mpi_pi(A->firstjet.Phi()-A->tst.Phi()));
+  float dp2msj = fabs(TVector2::Phi_mpi_pi(A->secondjet.Phi()-A->tst.Phi()));
   bool mcutflow = false;
   if (dp2mfj > 0.4 && dp2msj > 0.4)mcutflow = true;
-  for (size_t t = 0; t < cutflow.size(); t++){
-    if (!cutflow[t]) continue;
+  for (size_t i = 0; i < cutflow.size(); i++){
+    if (!cutflow[i]) continue;
     if (mcutflow){
       FillCF(i);
     }else cutflow[i] = false;
@@ -365,102 +459,106 @@ OneLepton& OneLepton::cut_dp2mj2(){
 }
 
 OneLepton& OneLepton::cut_mtlep(){
-  checkCF(13);
-  for (size_t t = 0; t < cutflow.size(); t++){
-    if (!cutflow[t]) continue;
-  mtlep = lep1 + tst;
-  float m_mtlep = sqrt(2*(lep1.Pt())*(tst.Pt())*(1-cos(lep1.Phi()-tst.Phi())));
-  if (m_mtlep > 30000. && m_mtlep < 120000.){
-    if(isMC){
-      nOneLepton16[14].second++;
-      nOneLepton15[14].second++;
-      dOneLepton16[14].second+=weight16;
-      dOneLepton15[14].second+=weight15;
-    }
-    else{
-      if (isdata15){
-        nOneLepton15[14].second++;
-        dOneLepton15[14].second+=weight15;
-      }
-      if (isdata16){
-        nOneLepton16[14].second++;
-        dOneLepton16[14].second+=weight16;
-      }
-    }
-  }else{cutflow = false;}
+  checkCF(14);
+  for (size_t i = 0; i < cutflow.size(); i++){
+    if (!cutflow[i]) continue;
+    if (!ismtlepcal)mtlepcal();
+    if (m_mtlep > 30000. && m_mtlep < 120000.){
+      FillCF(i);
+    }else cutflow[i] = false;
+  }
+  order++;
   return *this;
 }
 
 OneLepton& OneLepton::cut_makt120(){
-  if (!cutflow) return *this;
-  if (!isjet12cal) jet12cal();
-  if (j12sort.size() >= 1 && j12sort.at(0) > 70000.){
-    if(isMC){
-      nOneLepton16[15].second++;
-      nOneLepton15[15].second++;
-      dOneLepton16[15].second+=weight16;
-      dOneLepton15[15].second+=weight15;
-    }
-    else{
-      if (isdata15){
-        nOneLepton15[15].second++;
-        dOneLepton15[15].second+=weight15;
-      }
-      if (isdata16){
-        nOneLepton16[15].second++;
-        dOneLepton16[15].second+=weight16;
-      }
-    }
-  }else{cutflow = false;}
+  checkCF(15);
+  for (size_t i = 0; i < cutflow.size(); i++){
+    if (!cutflow[i]) continue;
+    if (A->j12sort.size() >= 1 && A->j12sort.at(0) > 120000.){
+      FillCF(i);
+    }else cutflow[i] = false;
+  }
+  order++;
+  return *this;
+}
+
+OneLepton& OneLepton::cut_makt120_ben(){
+  checkCF(15);
+  for (size_t i = 0; i < cutflow.size(); i++){
+    if (!cutflow[i]) continue;
+    if ((A->j12sort.size() >= 1 && A->j12sort.at(0) > 70000.)|| lep1.Pt()> 70000.){
+      FillCF(i);
+    }else cutflow[i] = false;
+  }
+  order++;
+  return *this;
+}
+
+OneLepton& OneLepton::cut_makt121(){
+  checkCF(16);
+  for (size_t i = 0; i < cutflow.size(); i++){
+    if (!cutflow[i]) continue;
+    if (A->j12sort.size() >= 2 && A->j12sort.at(1) > 120000.){
+      FillCF(i);
+    }else cutflow[i] = false;
+  }
+  order++;
   return *this;
 }
 
 OneLepton& OneLepton::cut_mtbmin(){
-  if (!cutflow) return *this;
-  if (!isjetcal) jetcal();
-  if (Mtbmin > 100000.){
-    if(isMC){
-      nOneLepton16[16].second++;
-      nOneLepton15[16].second++;
-      dOneLepton16[16].second+=weight16;
-      dOneLepton15[16].second+=weight15;
-    }
-    else{
-      if (isdata15){
-        nOneLepton15[16].second++;
-        dOneLepton15[16].second+=weight15;
-      }
-      if (isdata16){
-        nOneLepton16[16].second++;
-        dOneLepton16[16].second+=weight16;
-      }
-    }
-  }else{cutflow = false;}
+  checkCF(17);
+  for (size_t i = 0; i < cutflow.size(); i++){
+    if (!cutflow[i]) continue;
+    if (A->Mtbmin > 100000.){
+      FillCF(i);
+    }else cutflow[i] = false;
+  }
+  order++;
   return *this;
 }
 
 
 OneLepton& OneLepton::cut_drbl(){
-  if (!cutflow) return *this;
-  if (!isbjetcal) bjetcal();
-  if (dRminbl < 1.5){
-    if(isMC){
-      nOneLepton16[17].second++;
-      nOneLepton15[17].second++;
-      dOneLepton16[17].second+=weight16;
-      dOneLepton15[17].second+=weight15;
-    }
-    else{
-      if (isdata15){
-        nOneLepton15[17].second++;
-        dOneLepton15[17].second+=weight15;
-      }
-      if (isdata16){
-        nOneLepton16[17].second++;
-        dOneLepton16[17].second+=weight16;
-      }
-    }
-  }else{cutflow = false;}
+  checkCF(18);
+  for (size_t i = 0; i < cutflow.size(); i++){
+    if (!cutflow[i]) continue;
+    if (!isbjetcal) bjetcal();
+    if (dRminbl < 1.5){
+      FillCF(i);
+    }else cutflow[i] = false;
+  }
+  order++;
+  return *this;
+}
+
+OneLepton& OneLepton::cut_makt080(){
+  checkCF(19);
+  for (size_t i = 0; i < cutflow.size(); i++){
+    if (!cutflow[i]) continue;
+    if (A->j08sort.size()>=1 && A->j08sort.at(0) > 60000.){
+      FillCF(i);
+    }else cutflow[i] = false;
+  }
+  order++;
+  return *this;
+}
+
+OneLepton& OneLepton::cut_drbb(){
+  checkCF(20);
+  for (size_t i = 0; i < cutflow.size(); i++){
+    if (!cutflow[i]) continue;
+    if (A->dRbb > 1.){
+      FillCF(i);
+    }else cutflow[i] = false;
+  }
+  order++;
+  return *this;
+}
+
+OneLepton& OneLepton::cut_MET(){
+  order++;
   return *this;
 }
 
@@ -478,11 +576,15 @@ void OneLepton::NameInit(){
              "jet pt (80, 80 , 20, 20)GeV",
              "MET > 250GeV",
              "btag >= 2",
-             "dphiMetJetMin2 <= 0.4",
-             "30GeV < transverse mass of the lepton and MET < 120GeV",
-             "mass of first R = 1.2 jet > 70 GeV",
+             "dphiMetJetMin2 > 0.4",
+             "30GeV < mT of the lepton and MET < 120GeV",
+             "mass of first R = 1.2 jet > 120 GeV",
+             "mass of second R = 1.2 jet > 120 GeV",
              "mass between b jet and MET > 100GeV",
-             "min dR between lepton and b jet < 1.5"};
+             "min dR between lepton and b jet < 1.5",
+             "mass of first R = 0.8 jet > 60 GeV",
+             "dR(b,b) > 1",
+             };
   Tnames = {"CRT","CRST","CRW"};
   return;
 }
